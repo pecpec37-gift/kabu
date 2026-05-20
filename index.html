@@ -515,6 +515,15 @@
       <div class="logo-badge">📈 150問以上収録</div>
     </div>
 
+    <div class="name-input-area" style="margin-bottom:16px">
+      <label>プレーヤー名（任意）</label>
+      <input type="text" id="player-name" placeholder="例：株マスター" maxlength="16">
+    </div>
+
+    <div style="font-size:13px;color:var(--accent);text-align:center;margin-bottom:10px;font-weight:700;letter-spacing:1px">
+      👇 ジャンルをタップするとすぐにスタート！
+    </div>
+
     <div class="genre-grid" id="genre-grid">
       <!-- filled by JS -->
     </div>
@@ -527,12 +536,7 @@
       <div class="rule-row"><span>🏆</span><span>残り時間がそのまま<strong>ボーナス点</strong>に加算</span></div>
     </div>
 
-    <div class="name-input-area">
-      <label>プレーヤー名（任意）</label>
-      <input type="text" id="player-name" placeholder="例：株マスター" maxlength="16">
-    </div>
-
-    <button class="btn-start" id="btn-start" disabled>ジャンルを選んでスタート ▶</button>
+    <button class="btn-start" id="btn-start" disabled>👆 上のジャンルをタップしてスタート！</button>
   </div>
 
   <!-- ===== GAME SCREEN ===== -->
@@ -825,6 +829,7 @@ function buildGenreGrid() {
       <div class="genre-icon">${g.icon}</div>
       <div class="genre-name">${g.name}</div>
       <div class="genre-count">${QUESTIONS[g.id].length}問収録</div>
+      <div style="font-size:10px;color:var(--accent);margin-top:6px;letter-spacing:1px">▶ タップでスタート</div>
     </div>
   `).join('');
   grid.querySelectorAll('.genre-card').forEach(card => {
@@ -837,6 +842,8 @@ function selectGenre(id) {
   document.querySelectorAll('.genre-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('genre-card-' + id).classList.add('selected');
   document.getElementById('btn-start').disabled = false;
+  // 視覚フィードバック後に自動スタート
+  setTimeout(() => startGame(), 400);
 }
 
 // ============================================================
@@ -1047,6 +1054,8 @@ function showTop() {
   selectedGenre = null;
   document.querySelectorAll('.genre-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-start').textContent = 'ジャンルを選んでスタート ▶';
+  document.getElementById('btn-start').classList.remove('ready');
   showScreen('screen-top');
 }
 
