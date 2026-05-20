@@ -588,8 +588,8 @@
 
     <div class="wrong-review" id="wrong-review"></div>
 
-    <button class="btn-start" onclick="showTop()">🔄 もう一度挑戦</button>
-    <button class="btn-secondary" onclick="showTop()">← トップへ戻る</button>
+    <button class="btn-start" id="btn-retry">🔄 もう一度挑戦</button>
+    <button class="btn-secondary" id="btn-back">← トップへ戻る</button>
   </div>
 
 </div>
@@ -821,12 +821,15 @@ let selectedGenre = null;
 function buildGenreGrid() {
   const grid = document.getElementById('genre-grid');
   grid.innerHTML = GENRES.map(g => `
-    <div class="genre-card" onclick="selectGenre('${g.id}')" id="genre-card-${g.id}">
+    <div class="genre-card" data-genre="${g.id}" id="genre-card-${g.id}">
       <div class="genre-icon">${g.icon}</div>
       <div class="genre-name">${g.name}</div>
       <div class="genre-count">${QUESTIONS[g.id].length}問収録</div>
     </div>
   `).join('');
+  grid.querySelectorAll('.genre-card').forEach(card => {
+    card.addEventListener('click', () => selectGenre(card.dataset.genre));
+  });
 }
 
 function selectGenre(id) {
@@ -918,21 +921,28 @@ function renderQuestion() {
     const shuffledChoices = shuffle(q.choices.map((c, i) => ({ text: c, orig: i })));
     grid.className = 'choices-grid';
     grid.innerHTML = shuffledChoices.map((c, i) => `
-      <button class="choice-btn" onclick="answer(${c.orig === q.answer}, this, ${c.orig === q.answer ? 0 : c.orig})">
+      <button class="choice-btn" data-correct="${c.orig === q.answer}">
         <span class="choice-label">${String.fromCharCode(65+i)}</span>${c.text}
       </button>
     `).join('');
 
-    // Store correct button index for highlight
+    // isCorrect を data属性から読み取りリスナー登録
     grid.querySelectorAll('.choice-btn').forEach((btn, i) => {
-      btn.dataset.isCorrect = (shuffledChoices[i].orig === q.answer);
+      const isCorrect = (shuffledChoices[i].orig === q.answer);
+      btn.dataset.isCorrect = isCorrect;
+      btn.addEventListener('click', () => answer(isCorrect, btn));
     });
   } else {
     grid.className = 'choices-grid truefalse';
     grid.innerHTML = `
-      <button class="choice-btn truefalse-btn" onclick="answer(${q.answer === true}, this)">⭕ 正しい</button>
-      <button class="choice-btn truefalse-btn" onclick="answer(${q.answer === false}, this)">❌ 違う</button>
+      <button class="choice-btn truefalse-btn" data-correct="${q.answer === true}">⭕ 正しい</button>
+      <button class="choice-btn truefalse-btn" data-correct="${q.answer === false}">❌ 違う</button>
     `;
+    grid.querySelectorAll('.choice-btn').forEach(btn => {
+      const isCorrect = btn.dataset.correct === 'true';
+      btn.dataset.isCorrect = isCorrect;
+      btn.addEventListener('click', () => answer(isCorrect, btn));
+    });
   }
 }
 
@@ -1052,6 +1062,8 @@ function buildChartDeco() {
 // INIT
 // ============================================================
 document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-retry').addEventListener('click', showTop);
+document.getElementById('btn-back').addEventListener('click', showTop);
 buildTicker();
 buildGenreGrid();
 buildChartDeco();
