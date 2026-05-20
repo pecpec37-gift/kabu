@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📈 株式投資クイズ道場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e3a5f;
+    --accent: #00d4aa;
+    --accent2: #ff6b35;
+    --accent3: #ffd700;
+    --red: #ef4444;
+    --green: #22c55e;
+    --text: #e8f4f8;
+    --text-dim: #8ba4b8;
+    --ticker-bg: #050810;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Ticker tape */
+  .ticker-wrap {
+    background: var(--ticker-bg);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    padding: 6px 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+  }
+  .ticker {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    gap: 0;
+  }
+  .ticker-item {
+    padding: 0 24px;
+    display: inline-flex;
+    gap: 8px;
+  }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .down { color: var(--red); }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 80px 16px 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== TOP SCREEN ===== */
+  .logo-area {
+    text-align: center;
+    padding: 32px 0 24px;
+  }
+  .logo-main {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 10vw, 80px);
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+  }
+  .logo-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 6px;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+  .logo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent2), #ff9a3c);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .genre-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  .genre-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(0,212,170,0.05));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .genre-card:hover::before { opacity: 1; }
+  .genre-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,212,170,0.15);
+  }
+  .genre-card.selected {
+    border-color: var(--accent);
+    background: rgba(0,212,170,0.08);
+    box-shadow: 0 0 0 2px rgba(0,212,170,0.3);
+  }
+  .genre-icon { font-size: 32px; margin-bottom: 8px; }
+  .genre-name { font-size: 14px; font-weight: 700; }
+  .genre-count { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .rules-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-dim);
+  }
+  .rules-box strong { color: var(--accent); }
+  .rules-box .rule-row { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; }
+
+  .name-input-area {
+    margin: 20px 0;
+  }
+  .name-input-area label { font-size: 13px; color: var(--text-dim); display: block; margin-bottom: 8px; }
+  .name-input-area input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-input-area input:focus { border-color: var(--accent); }
+
+  .btn-start {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #00b38a);
+    color: #0a0e1a;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,170,0.4); }
+  .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ===== GAME SCREEN ===== */
+  .game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .question-counter {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .score-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--accent3);
+  }
+
+  .timer-area {
+    margin-bottom: 16px;
+  }
+  .timer-bar-bg {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 1s linear, background-color 0.3s;
+    border-radius: 4px;
+  }
+  .timer-bar.danger { background: linear-gradient(90deg, var(--red), #ff9a3c); }
+  .timer-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 32px;
+    text-align: center;
+    color: var(--accent3);
+    margin-top: 6px;
+    transition: color 0.3s;
+  }
+  .timer-text.danger { color: var(--red); animation: pulse 0.5s ease-in-out infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+  .question-type-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .badge-4choice { background: rgba(0,212,170,0.15); color: var(--accent); border: 1px solid var(--accent); }
+  .badge-truefalse { background: rgba(255,107,53,0.15); color: var(--accent2); border: 1px solid var(--accent2); }
+
+  .question-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 16px;
+    min-height: 80px;
+  }
+  .question-genre-tag {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .question-text {
+    font-size: clamp(15px, 3.5vw, 18px);
+    font-weight: 700;
+    line-height: 1.7;
+  }
+
+  .choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .choices-grid.truefalse {
+    grid-template-columns: 1fr 1fr;
+  }
+  .choice-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: clamp(13px, 2.8vw, 15px);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    line-height: 1.5;
+    position: relative;
+  }
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0,212,170,0.06);
+  }
+  .choice-btn.truefalse-btn {
+    text-align: center;
+    font-size: 20px;
+    padding: 20px;
+    font-weight: 900;
+  }
+  .choice-btn.correct {
+    border-color: var(--green);
+    background: rgba(34,197,94,0.15);
+    color: var(--green);
+  }
+  .choice-btn.wrong {
+    border-color: var(--red);
+    background: rgba(239,68,68,0.15);
+    color: var(--red);
+  }
+  .choice-btn:disabled { cursor: default; }
+  .choice-label {
+    display: inline-block;
+    background: var(--border);
+    color: var(--text-dim);
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .feedback-bar {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 0.3s;
+  }
+  .feedback-bar.show { opacity: 1; transform: translateY(0); }
+  .feedback-bar.correct-fb { background: rgba(34,197,94,0.15); border: 1px solid var(--green); color: var(--green); }
+  .feedback-bar.wrong-fb { background: rgba(239,68,68,0.15); border: 1px solid var(--red); color: var(--red); }
+
+  /* ===== RESULT SCREEN ===== */
+  .result-hero {
+    text-align: center;
+    padding: 32px 0 24px;
+  }
+  .result-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 15vw, 100px);
+    line-height: 1;
+    letter-spacing: 4px;
+  }
+  .rank-S { color: var(--accent3); text-shadow: 0 0 40px rgba(255,215,0,0.5); }
+  .rank-A { color: var(--green); }
+  .rank-B { color: var(--accent); }
+  .rank-C { color: var(--text-dim); }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    color: var(--accent3);
+  }
+  .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .total-score-display {
+    text-align: center;
+    margin: 16px 0;
+    background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(255,215,0,0.05));
+    border: 1px solid rgba(0,212,170,0.3);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .total-score-label { font-size: 12px; color: var(--text-dim); letter-spacing: 3px; text-transform: uppercase; }
+  .total-score-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 14vw, 96px);
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+  .total-score-breakdown { font-size: 12px; color: var(--text-dim); margin-top: 6px; font-family: 'Share Tech Mono', monospace; }
+
+  .wrong-review {
+    margin: 16px 0;
+  }
+  .wrong-review-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wrong-item {
+    background: var(--surface);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .wrong-item-q { font-size: 13px; color: var(--text); margin-bottom: 8px; line-height: 1.6; }
+  .wrong-item-a { font-size: 13px; color: var(--green); display: flex; gap: 8px; align-items: flex-start; }
+  .wrong-item-genre { font-size: 10px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; margin-bottom: 4px; }
+
+  .btn-secondary {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+    margin-top: 10px;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .genre-grid { grid-template-columns: 1fr 1fr; }
+    .choices-grid { grid-template-columns: 1fr; }
+    .choices-grid.truefalse { grid-template-columns: 1fr 1fr; }
+    .result-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .screen.active { animation: fadeInUp 0.35s ease; }
+
+  /* Chart candlestick decoration */
+  .chart-deco {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    padding: 16px;
+    text-align: right;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- Ticker Tape -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ===== TOP SCREEN ===== -->
+  <div class="screen active" id="screen-top">
+    <div class="logo-area">
+      <div class="logo-main">株式道場</div>
+      <div class="logo-sub">Stock Quiz Master</div>
+      <div class="logo-badge">📈 150問以上収録</div>
+    </div>
+
+    <div class="genre-grid" id="genre-grid">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="rules-box">
+      <div class="rule-row"><span>📋</span><span>各ジャンルから<strong>10問ランダム出題</strong>（4択＋○×ミックス）</span></div>
+      <div class="rule-row"><span>⏱</span><span>制限時間 <strong>120秒</strong>スタート</span></div>
+      <div class="rule-row"><span>✅</span><span>正解 → <strong>+10点</strong> ＋ 時間<strong>+5秒</strong></span></div>
+      <div class="rule-row"><span>❌</span><span>不正解 → 減点なし ＋ 時間<strong>−5秒</strong></span></div>
+      <div class="rule-row"><span>🏆</span><span>残り時間がそのまま<strong>ボーナス点</strong>に加算</span></div>
+    </div>
+
+    <div class="name-input-area">
+      <label>プレーヤー名（任意）</label>
+      <input type="text" id="player-name" placeholder="例：株マスター" maxlength="16">
+    </div>
+
+    <button class="btn-start" id="btn-start" disabled>ジャンルを選んでスタート ▶</button>
+  </div>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <div class="screen" id="screen-game">
+    <div class="game-header">
+      <div class="question-counter" id="q-counter">問 1 / 10</div>
+      <div class="score-display" id="score-display">0 PT</div>
+    </div>
+
+    <div class="timer-area">
+      <div class="timer-bar-bg"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+      <div class="timer-text" id="timer-text">120</div>
+    </div>
+
+    <div class="feedback-bar" id="feedback-bar"></div>
+
+    <div class="question-box">
+      <div class="question-genre-tag" id="q-genre-tag"></div>
+      <div id="question-type-badge"></div>
+      <div class="question-text" id="question-text"></div>
+    </div>
+
+    <div class="choices-grid" id="choices-grid"></div>
+  </div>
+
+  <!-- ===== RESULT SCREEN ===== -->
+  <div class="screen" id="screen-result">
+    <div class="result-hero">
+      <div class="result-rank" id="result-rank">A</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px;" id="result-player-name"></div>
+    </div>
+
+    <div class="result-stats">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-correct">0</div>
+        <div class="stat-label">✅ 正解</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-wrong">0</div>
+        <div class="stat-label">❌ 不正解</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-bonus">0</div>
+        <div class="stat-label">⏱ タイムボーナス</div>
+      </div>
+    </div>
+
+    <div class="total-score-display">
+      <div class="total-score-label">TOTAL SCORE</div>
+      <div class="total-score-value" id="total-score">0</div>
+      <div class="total-score-breakdown" id="score-breakdown"></div>
+    </div>
+
+    <div class="wrong-review" id="wrong-review"></div>
+
+    <button class="btn-start" onclick="showTop()">🔄 もう一度挑戦</button>
+    <button class="btn-secondary" onclick="showTop()">← トップへ戻る</button>
+  </div>
+
+</div>
+
+<div class="chart-deco" id="chart-deco"></div>
+
+<script>
+// ============================================================
+// QUESTION BANK (150問以上)
+// ============================================================
+const GENRES = [
+  { id: 'basic',    name: '株の基本',    icon: '📚', color: '#00d4aa' },
+  { id: 'analysis', name: 'チャート分析', icon: '📊', color: '#ffd700' },
+  { id: 'terms',    name: '経済用語',    icon: '💼', color: '#ff6b35' },
+  { id: 'strategy', name: '投資戦略',    icon: '🎯', color: '#a78bfa' },
+  { id: 'world',    name: '世界の市場',  icon: '🌏', color: '#38bdf8' },
+];
+
+// type: 'mc' = 4択, 'tf' = ○×
+const QUESTIONS = {
+  basic: [
+    { type:'mc', q:'株式会社が資金調達のために発行する有価証券を何という？', choices:['株式','社債','国債','手形'], answer:0 },
+    { type:'mc', q:'東京証券取引所の株式市場において、最も規模が大きい市場はどれか？', choices:['プライム市場','スタンダード市場','グロース市場','JASDAQ'], answer:0 },
+    { type:'mc', q:'株価収益率（PER）の計算式は？', choices:['株価÷1株当たり純利益','純利益÷株価','株価×発行株数','売上高÷株価'], answer:0 },
+    { type:'mc', q:'配当利回りの計算式として正しいのは？', choices:['1株配当÷株価×100','株価÷配当×100','純利益÷株数×100','時価総額÷純利益'], answer:0 },
+    { type:'mc', q:'株価純資産倍率（PBR）が1倍を下回る場合、一般的にどのような状態を示す？', choices:['株価が解散価値より低い','株価が割高','業績が好調','成長期待が高い'], answer:0 },
+    { type:'mc', q:'信用取引で株を借りて売る手法を何という？', choices:['空売り','信用買い','現物買い','つなぎ売り'], answer:0 },
+    { type:'mc', q:'株式の売買において、売り注文と買い注文が一致して取引が成立することを何という？', choices:['約定','発注','清算','決済'], answer:0 },
+    { type:'mc', q:'東証プライム市場への上場維持基準として、流通株式時価総額は最低いくら必要か？', choices:['100億円以上','10億円以上','50億円以上','500億円以上'], answer:0 },
+    { type:'mc', q:'権利確定日の翌営業日（権利落ち日）に株価が下落する現象を何という？', choices:['権利落ち','配当落ち','株式分割','増資'], answer:0 },
+    { type:'mc', q:'株式投資において「ロスカット」とは？', choices:['損失を確定させて撤退すること','利益を確定させること','追加投資すること','配当を受け取ること'], answer:0 },
+    { type:'tf', q:'PER（株価収益率）は数値が低いほど株が割安とされる', answer:true },
+    { type:'tf', q:'株式の配当は必ず年2回支払われる', answer:false },
+    { type:'tf', q:'東京証券取引所の立会時間は平日の9時〜15時30分である', answer:true },
+    { type:'tf', q:'株式を1単元未満で購入することを「単元未満株」という', answer:true },
+    { type:'tf', q:'PBR（株価純資産倍率）が高いほど株が割安とされる', answer:false },
+    { type:'mc', q:'IPOとは何の略称か？', choices:['新規株式公開','株式分割','株式買い戻し','増資'], answer:0 },
+    { type:'mc', q:'自己資本利益率（ROE）の計算式は？', choices:['純利益÷自己資本×100','売上高÷純利益×100','自己資本÷総資産×100','純利益÷総資産×100'], answer:0 },
+    { type:'mc', q:'指値注文の説明として正しいのは？', choices:['価格を指定して注文する','市場価格で即時注文する','一定時間後に自動注文する','条件付きで注文する'], answer:0 },
+    { type:'mc', q:'株式市場の売買単位を何という？', choices:['単元株','基本株','標準株','基準株'], answer:0 },
+    { type:'tf', q:'成行注文は指値注文よりも約定しやすい', answer:true },
+    { type:'mc', q:'株式投資で「塩漬け」とはどういう意味か？', choices:['含み損の株を売れずにそのまま保有すること','配当を再投資して長期保有すること','株を分散して保有すること','損切りして現金化すること'], answer:0 },
+    { type:'mc', q:'「ストップ高」とは何か？', choices:['1日で上昇できる株価の上限に達した状態','売買が停止された状態','株価が年初来高値を更新した状態','異常な値上がりに対する調査が入った状態'], answer:0 },
+    { type:'mc', q:'「優待利回り」とは何を示す指標か？', choices:['株主優待の経済的価値÷株価×100','配当÷株価×100','純利益÷株価×100','優待品の市場価値÷配当金'], answer:0 },
+    { type:'tf', q:'日本の株式市場で取引可能な時間は、前場と後場に分かれている', answer:true },
+    { type:'mc', q:'「増配」とはどんな状態か？', choices:['1株あたりの配当金が前期より増えること','新株を発行して資本増強すること','設備投資を増やすこと','株式を分割して株数を増やすこと'], answer:0 },
+    { type:'tf', q:'TOPIXは東証一部（現プライム市場）の全銘柄を対象にした指数である', answer:true },
+    { type:'mc', q:'「自社株買い」が株価に与える影響として一般的なのは？', choices:['株価上昇要因になることが多い','株価下落要因になる','配当増加に直結する','業績が悪化しているサインとなる'], answer:0 },
+    { type:'mc', q:'「スクリーニング」とは株式投資においてどういう意味か？', choices:['条件を設定して銘柄を絞り込むこと','チャートを分析すること','決算書を読むこと','板情報を確認すること'], answer:0 },
+    { type:'mc', q:'「四半期決算」とは何か？', choices:['3ヶ月ごとに発表される業績報告','年に1回の本決算','月次の売上報告','週次の取引報告'], answer:0 },
+    { type:'mc', q:'「板（気配値）」を見るときに確認できる情報はどれか？', choices:['各価格帯の売買注文の数量','企業の財務諸表','株価の過去チャート','配当の支払予定日'], answer:0 },
+    { type:'tf', q:'「特別配当」は通常の配当とは別に臨時で支払われる配当金のことである', answer:true },
+    { type:'mc', q:'「前場」と「後場」の間の昼休み時間帯（東証）はどのくらいか？', choices:['11:30〜12:30の約1時間','12:00〜13:00の約1時間','11:00〜13:00の約2時間','12:00〜12:30の30分'], answer:0 },
+    { type:'tf', q:'「上場廃止」になった株式は市場で売却することができなくなる', answer:true },
+    { type:'mc', q:'「株主総会」で議決権を行使できるのは誰か？', choices:['株主（基準日時点）','取締役','社員全員','証券会社'], answer:0 },
+    { type:'mc', q:'「EPS（一株当たり利益）」の計算式はどれか？', choices:['純利益÷発行済株式数','売上高÷発行済株式数','営業利益÷発行済株式数','時価総額÷純利益'], answer:0 },
+    { type:'tf', q:'「値がさ株」とは1株あたりの株価が高い株のことである', answer:true },
+    { type:'mc', q:'「テンバガー」とは株式投資の文脈でどんな意味か？', choices:['株価が10倍になった（または期待される）銘柄','株価が急落した銘柄','10年以上保有した銘柄','配当が10%を超える銘柄'], answer:0 },
+    { type:'mc', q:'「フリーキャッシュフロー（FCF）」はどのように計算されるか？', choices:['営業キャッシュフロー－設備投資額','純利益＋減価償却費','売上高－費用','営業利益＋減価償却費'], answer:0 },
+    { type:'tf', q:'「株式分割」が行われると、1株あたりの株価は下がるが保有株数は増える', answer:true },
+  ],
+
+  analysis: [
+    { type:'mc', q:'ローソク足で始値より終値が高い（株価が上昇した）足を何という？', choices:['陽線','陰線','十字線','上ひげ'], answer:0 },
+    { type:'mc', q:'ボリンジャーバンドは何を基に作成されるか？', choices:['移動平均線と標準偏差','出来高と株価','RSIとMACD','移動平均線のみ'], answer:0 },
+    { type:'mc', q:'MACD（移動平均収束拡散法）でシグナルラインとMACDラインが交差する点を何という？', choices:['クロス（ゴールデンクロス／デッドクロス）','ダイバージェンス','コンバージェンス','ヒストグラム'], answer:0 },
+    { type:'mc', q:'RSI（相対力指数）が70%を超えた状態は一般的に何を示すか？', choices:['買われすぎ','売られすぎ','トレンドなし','上昇トレンド中'], answer:0 },
+    { type:'mc', q:'出来高（volume）が急増した場合、チャート分析ではどのように解釈されることが多いか？', choices:['トレンド転換のサイン','価格変動の信頼性が高まる','相場の停滞','取引不活発'], answer:1 },
+    { type:'mc', q:'移動平均線の短期線が長期線を下から上に突き抜けることを何という？', choices:['ゴールデンクロス','デッドクロス','グランビルの法則','ドンチャン'], answer:0 },
+    { type:'mc', q:'フィボナッチリトレースメントでよく使われる主要なレベルはどれか？', choices:['38.2%・50%・61.8%','25%・50%・75%','20%・40%・60%','33%・50%・66%'], answer:0 },
+    { type:'mc', q:'ダブルトップのチャートパターンは一般的に何を示すか？', choices:['下落転換のサイン','上昇継続のサイン','横ばい継続','急騰のサイン'], answer:0 },
+    { type:'mc', q:'ヘッドアンドショルダーパターンで、ネックラインを下回ると何が示唆されるか？', choices:['下落トレンドへの転換','上昇トレンドの継続','横ばい相場','急反発'], answer:0 },
+    { type:'mc', q:'一目均衡表の「雲」は何と何で構成されるか？', choices:['先行スパン1と先行スパン2','転換線と基準線','遅行スパンと転換線','基準線と先行スパン1'], answer:0 },
+    { type:'tf', q:'ローソク足の「陰線」は、終値が始値より低いことを示す', answer:true },
+    { type:'tf', q:'移動平均線の期間が長いほど、直近の価格変動に敏感に反応する', answer:false },
+    { type:'tf', q:'RSIが30%以下になると、一般的に「売られすぎ」と判断される', answer:true },
+    { type:'tf', q:'ボリンジャーバンドで株価が±2σを超えることは非常に稀である', answer:true },
+    { type:'tf', q:'出来高なしの大幅な株価上昇は、信頼性が高いとされる', answer:false },
+    { type:'mc', q:'「三角保ち合い」パターンで上放れした場合、一般的にどう解釈するか？', choices:['上昇継続のシグナル','下落転換のシグナル','横ばい継続','取引停止'], answer:0 },
+    { type:'mc', q:'ATR（真の値幅）は主に何の指標として使われるか？', choices:['ボラティリティ（価格変動の大きさ）','トレンドの方向','出来高の変化','RSIの補完指標'], answer:0 },
+    { type:'mc', q:'サポートライン（支持線）とは何か？', choices:['株価が下落を止めやすい価格帯','株価が上昇を止めやすい価格帯','移動平均線のこと','ボリンジャーバンドのこと'], answer:0 },
+    { type:'tf', q:'ゴールデンクロスは一般的に買いシグナルとされる', answer:true },
+    { type:'mc', q:'「包み足（エンゲルフィング）」の陽線バージョンは何を示唆することが多いか？', choices:['下落から上昇への転換','上昇継続','下落継続','横ばい'], answer:0 },
+    { type:'mc', q:'「はらみ足」チャートパターンが示すことは？', choices:['トレンドの一時停止や転換の可能性','強いトレンド継続のサイン','出来高急増のサイン','窓（ギャップ）の発生'], answer:0 },
+    { type:'mc', q:'「上昇ウェッジ」パターンは一般的にどちらを示唆するか？', choices:['下落転換のサイン','上昇継続のサイン','横ばい継続','急騰のサイン'], answer:0 },
+    { type:'tf', q:'移動平均線が横ばいの状態では、トレンドが発生していないことを示す場合が多い', answer:true },
+    { type:'mc', q:'「窓（ギャップ）」が株価チャートで発生した場合、その窓が後日埋められる現象を何という？', choices:['窓埋め','逆行現象','リトレースメント','コンソリデーション'], answer:0 },
+    { type:'mc', q:'「スローストキャスティクス」において、%Kと%Dを使うが、一般的に売りシグナルが出るのはどんな状況か？', choices:['%Kが%Dを上から下に突き抜けたとき（80以上での場合）','%Kが%Dを下から上に突き抜けたとき','出来高が増加したとき','RSIが50を下回ったとき'], answer:0 },
+    { type:'tf', q:'「かぶせ線」は下落から上昇への転換を示すローソク足パターンである', answer:false },
+  ],
+
+  terms: [
+    { type:'mc', q:'中央銀行が市場に資金を供給し、市場金利を押し下げる政策を何という？', choices:['金融緩和','金融引き締め','量的緩和','ゼロ金利政策'], answer:0 },
+    { type:'mc', q:'GDP（国内総生産）とは何を測る指標か？', choices:['国内で生産されたすべての財・サービスの付加価値の合計','国民の平均所得','国の輸出総額','政府の財政収支'], answer:0 },
+    { type:'mc', q:'インフレーション（インフレ）とは？', choices:['物価が持続的に上昇する状態','物価が持続的に下落する状態','金利が上昇する状態','通貨が増発される状態'], answer:0 },
+    { type:'mc', q:'「デフレスパイラル」とは何か？', choices:['物価下落→消費減→企業収益悪化→賃金低下の悪循環','金利上昇による株価下落の連鎖','輸出減による円安の加速','不良債権増加による銀行経営悪化'], answer:0 },
+    { type:'mc', q:'政府が財政出動によって景気を刺激する政策を何という？', choices:['財政政策','金融政策','為替介入','規制緩和'], answer:0 },
+    { type:'mc', q:'日銀の政策決定会合で決定される主な政策金利は？', choices:['無担保コール翌日物金利','プライムレート','LIBOR','FFレート'], answer:0 },
+    { type:'mc', q:'「フォワードガイダンス」とは？', choices:['中央銀行が将来の金融政策の方向性を示すこと','企業の業績予想のこと','株式のアナリスト予測','為替の先物予測'], answer:0 },
+    { type:'mc', q:'景気循環の「回復→好況→後退→不況」のサイクルを何という？', choices:['景気サイクル（ビジネスサイクル）','Kコンドラチェフ波','デフレサイクル','信用サイクル'], answer:0 },
+    { type:'mc', q:'為替において円高が進むと、輸出企業の業績にどう影響するか？', choices:['マイナスの影響（利益が目減りしやすい）','プラスの影響（利益が増えやすい）','影響なし','仕入れコストが増加する'], answer:0 },
+    { type:'mc', q:'「逆イールド」とは何か？', choices:['短期金利が長期金利を上回る状態','長期金利が短期金利を上回る通常の状態','株価と債券価格が逆に動く現象','円安と株高が同時進行する現象'], answer:0 },
+    { type:'tf', q:'金利が上昇すると、一般的に債券価格は下落する', answer:true },
+    { type:'tf', q:'円高は日本の輸出企業にとって有利に働く', answer:false },
+    { type:'tf', q:'FRBはアメリカの中央銀行にあたる組織である', answer:true },
+    { type:'tf', q:'景気後退期には一般的に株式市場も下落しやすい', answer:true },
+    { type:'tf', q:'消費者物価指数（CPI）は企業間取引価格を測定する指標である', answer:false },
+    { type:'mc', q:'企業のEPS（一株当たり利益）が増加すると、一般的に株価はどうなるか？', choices:['上昇しやすい','下落しやすい','変化なし','ボラティリティが増す'], answer:0 },
+    { type:'mc', q:'「アノマリー」とは株式市場においてどのような現象か？', choices:['理論では説明しにくい経験則的な株価パターン','企業の業績異常','市場の取引停止','異常な出来高増加'], answer:0 },
+    { type:'mc', q:'株式の「時価総額」はどのように計算するか？', choices:['株価×発行済株式数','純利益×PER','売上高×利益率','株価×出来高'], answer:0 },
+    { type:'tf', q:'量的緩和（QE）は中央銀行が市場から国債などを買い入れる政策である', answer:true },
+    { type:'mc', q:'「ブラックスワン」とは投資の文脈でどんな意味か？', choices:['予測不可能で大きな影響を持つ稀な出来事','株価の急騰を指す俗語','空売り手法の一種','ヘッジファンドの戦略'], answer:0 },
+    { type:'mc', q:'「テーパリング」とはどのような政策か？', choices:['中央銀行が量的緩和の規模を段階的に縮小すること','金利を急激に引き上げること','財政出動を一気に増やすこと','為替介入で通貨安を促進すること'], answer:0 },
+    { type:'mc', q:'「スタグフレーション」とはどんな経済状態か？', choices:['景気停滞と物価上昇が同時に起きている状態','高成長と低インフレが続く理想的な状態','景気拡大と雇用悪化が同時に起きる状態','金融緩和と財政緊縮が同時進行する状態'], answer:0 },
+    { type:'tf', q:'国債は株式より一般的にリスクが低いとされる', answer:true },
+    { type:'mc', q:'「信用収縮（クレジットクランチ）」とは何か？', choices:['銀行が貸し渋りを行い資金供給が急減する状態','金利が急上昇する状態','株価が急落する状態','通貨が急速に価値を失う状態'], answer:0 },
+    { type:'mc', q:'「オルタナティブ投資」に含まれないのは一般的にどれか？', choices:['国内大型株への投資','不動産投資（REIT）','ヘッジファンド','コモディティ（商品）投資'], answer:0 },
+    { type:'tf', q:'「マネーサプライ」は市場に流通している通貨量の合計を指す', answer:true },
+  ],
+
+  strategy: [
+    { type:'mc', q:'「ドルコスト平均法」とは何か？', choices:['一定額を定期的に買い続ける手法','株価が安い時だけ大量に買う手法','株価の移動平均を使う売買手法','一度に全資金を投資する手法'], answer:0 },
+    { type:'mc', q:'「バリュー投資」の基本的な考え方は？', choices:['本質的価値より割安な株を買う','成長率の高い企業に投資する','チャートのパターンを使う','短期の値動きで利益を得る'], answer:0 },
+    { type:'mc', q:'「グロース投資」の基本的な考え方は？', choices:['高い成長率が期待できる企業に投資する','割安株を長期保有する','配当収入を重視する','債券と株式を組み合わせる'], answer:0 },
+    { type:'mc', q:'ウォーレン・バフェットが提唱することで有名な投資手法は？', choices:['バリュー投資（割安株投資）','デイトレード','モメンタム投資','アルゴリズム取引'], answer:0 },
+    { type:'mc', q:'「分散投資」の主な目的は？', choices:['リスクを低減する','リターンを最大化する','税金を節約する','取引コストを下げる'], answer:0 },
+    { type:'mc', q:'「ポートフォリオ理論」を提唱した経済学者は誰か？', choices:['ハリー・マーコウィッツ','ウォーレン・バフェット','ジョン・ケインズ','ミルトン・フリードマン'], answer:0 },
+    { type:'mc', q:'株式投資において「損切り（ストップロス）」の目的は？', choices:['損失が拡大するのを防ぐ','利益を確定する','配当を受け取る','税金対策をする'], answer:0 },
+    { type:'mc', q:'「モメンタム投資」とはどんな戦略か？', choices:['上昇トレンドの銘柄を買い、下落トレンドの銘柄を売る','割安株を長期保有する','配当収入を重視する','逆張りで安値を拾う'], answer:0 },
+    { type:'mc', q:'「逆張り投資」とはどんな戦略か？', choices:['市場の動きに逆らって売買する','市場の動きに従って売買する','インデックスに連動する','配当を重視する'], answer:0 },
+    { type:'mc', q:'ETF（上場投資信託）の特徴として正しいのは？', choices:['証券取引所でリアルタイムに売買できる','銀行の窓口でのみ購入できる','元本が保証されている','必ず株価指数に連動する'], answer:0 },
+    { type:'tf', q:'長期投資は一般的に短期売買より取引コストが低い', answer:true },
+    { type:'tf', q:'ドルコスト平均法では、株価が高い時に多く買い、安い時に少なく買う', answer:false },
+    { type:'tf', q:'分散投資によって投資リスクをゼロにすることができる', answer:false },
+    { type:'tf', q:'インデックスファンドは特定の株価指数に連動することを目指す', answer:true },
+    { type:'tf', q:'バリュー投資ではPERやPBRが低い銘柄を重視することが多い', answer:true },
+    { type:'mc', q:'「アセットアロケーション」とは？', choices:['資産をどの資産クラスに配分するかを決めること','個別銘柄を選ぶこと','売買タイミングを決めること','損切りラインを設定すること'], answer:0 },
+    { type:'mc', q:'「リバランス」とは何か？', choices:['ポートフォリオの配分比率を目標値に戻すこと','損切りをして損失を確定すること','新たな銘柄を購入すること','配当を再投資すること'], answer:0 },
+    { type:'mc', q:'「シャープレシオ」は何を測る指標か？', choices:['リスクあたりのリターンの効率性','絶対的なリターンの大きさ','ポートフォリオの総リスク','分散投資の効果'], answer:0 },
+    { type:'tf', q:'高配当株への投資は、インカムゲイン（配当収益）を重視する戦略である', answer:true },
+    { type:'mc', q:'「コア・サテライト戦略」とは？', choices:['安定した中核資産（コア）と高リスク・高リターン資産（サテライト）を組み合わせる戦略','株式と債券のみで構成する戦略','短期と長期の売買を組み合わせる戦略','国内と海外の株を分けて管理する戦略'], answer:0 },
+    { type:'mc', q:'「NISA（少額投資非課税制度）」の最大のメリットは？', choices:['投資利益（売却益・配当）が非課税になること','元本が保証されること','損失を税金から控除できること','信用取引が優遇されること'], answer:0 },
+    { type:'mc', q:'「積立投資」と「一括投資」を比べたとき、積立投資の長所は？', choices:['購入価格を平均化してリスクを分散できる','一括投資より絶対的なリターンが高い','相場の底で大量購入できる','短期間で大きな利益を得やすい'], answer:0 },
+    { type:'tf', q:'ヘッジファンドは一般的に個人投資家が気軽に投資できる商品である', answer:false },
+    { type:'mc', q:'「テクニカル分析」と「ファンダメンタルズ分析」の違いは？', choices:['テクニカルは価格・出来高を分析し、ファンダメンタルズは企業の財務や経済を分析する','テクニカルは長期投資向け、ファンダメンタルズは短期向けである','テクニカルは企業価値を、ファンダメンタルズは市場心理を分析する','両者は同じ意味である'], answer:0 },
+    { type:'mc', q:'「配当再投資」戦略の主な目的は？', choices:['複利効果で資産を増やすこと','税金を節約すること','リスクを完全にゼロにすること','短期売買で利益を得ること'], answer:0 },
+    { type:'tf', q:'「押し目買い」とは、上昇トレンド中に一時的に下がった局面で購入する手法である', answer:true },
+  ],
+
+  world: [
+    { type:'mc', q:'ニューヨーク証券取引所（NYSE）の株価指数として代表的なものは？', choices:['ダウ工業株30種（NYダウ）','S&P500','NASDAQ総合指数','FTSE100'], answer:0 },
+    { type:'mc', q:'世界最大の株式時価総額を誇る国はどこか（近年の傾向）？', choices:['アメリカ','中国','日本','イギリス'], answer:0 },
+    { type:'mc', q:'「ウォール街」はどの都市にあるか？', choices:['ニューヨーク','ロンドン','シカゴ','サンフランシスコ'], answer:0 },
+    { type:'mc', q:'BRICS諸国でないのはどれか？', choices:['オーストラリア','ブラジル','ロシア','インド'], answer:0 },
+    { type:'mc', q:'ロンドン証券取引所の代表的な株価指数は？', choices:['FTSE100','DAX40','CAC40','ユーロストックス50'], answer:0 },
+    { type:'mc', q:'「原油価格の基準となる指標」として代表的なのはどれか？', choices:['WTI原油・ブレント原油','天然ガス先物','銅先物','金先物'], answer:0 },
+    { type:'mc', q:'「VIX指数」は何を示す指標か？', choices:['市場の恐怖・ボラティリティの度合い','米国の国内総生産成長率','ドルの強さを示す指数','米国の失業率'], answer:0 },
+    { type:'mc', q:'S&P500指数は何銘柄で構成されているか？', choices:['500銘柄','30銘柄','100銘柄','2000銘柄'], answer:0 },
+    { type:'mc', q:'中国の代表的な株価指数はどれか？', choices:['上海総合指数','ハンセン指数','コスピ指数','台湾加権指数'], answer:0 },
+    { type:'mc', q:'「為替ヘッジ」の目的は？', choices:['為替変動リスクを軽減すること','利益を最大化すること','取引コストを下げること','流動性を高めること'], answer:0 },
+    { type:'tf', q:'NASDAQはテクノロジー関連企業の上場が多い米国の株式市場である', answer:true },
+    { type:'tf', q:'日経平均株価は東証プライム市場から選ばれた225銘柄で構成される', answer:true },
+    { type:'tf', q:'ドイツの代表的な株価指数はCAC40である', answer:false },
+    { type:'tf', q:'新興国市場は先進国市場に比べてリスクが低い傾向がある', answer:false },
+    { type:'tf', q:'円高になると、ドル建て資産を円換算したとき価値が下がる', answer:true },
+    { type:'mc', q:'「ユーロ圏」でユーロを採用していない主要国はどれか？', choices:['イギリス','フランス','ドイツ','スペイン'], answer:0 },
+    { type:'mc', q:'「GPIF」とは何か？', choices:['年金積立金管理運用独立行政法人（世界最大級の機関投資家）','米国の年金基金','日銀の投資部門','政府系ヘッジファンド'], answer:0 },
+    { type:'mc', q:'シンガポール証券取引所の略称は？', choices:['SGX','SET','HKEX','ASX'], answer:0 },
+    { type:'tf', q:'FRB（連邦準備制度理事会）はアメリカの金融政策を担う中央銀行に相当する機関である', answer:true },
+    { type:'mc', q:'「キャリートレード」とは？', choices:['低金利通貨で借り、高金利通貨資産に投資する手法','高速売買アルゴリズムを使った取引','現物と先物の価格差を利用した取引','複数の通貨を同時に保有する手法'], answer:0 },
+    { type:'mc', q:'「サーキットブレーカー」とは株式市場で何のために設けられているか？', choices:['急激な株価変動時に取引を一時停止する仕組み','取引システムの障害を検知する仕組み','不正取引を自動検出する仕組み','株価指数を自動計算する仕組み'], answer:0 },
+    { type:'mc', q:'「コモディティ（商品）」として取引される代表的なものはどれか？', choices:['金・原油・とうもろこし','株式・債券・REIT','ETF・投資信託・外貨預金','先物・オプション・スワップ'], answer:0 },
+    { type:'tf', q:'金（ゴールド）は一般的にリスク回避時に買われる「安全資産」とされる', answer:true },
+    { type:'mc', q:'「ハンセン指数」はどの国・地域の株価指数か？', choices:['香港','中国本土','台湾','韓国'], answer:0 },
+    { type:'mc', q:'「新興国市場（エマージング市場）」の特徴として正しいのは？', choices:['高い成長期待がある一方、政治・経済リスクが高い','先進国より流動性が高い','インフレリスクがほぼない','通貨リスクが先進国より低い'], answer:0 },
+    { type:'tf', q:'ユーロ圏の中央銀行はECB（欧州中央銀行）である', answer:true },
+    { type:'mc', q:'「インデックス投資」でよく使われるMSCI全世界株式指数（ACWI）は何カ国をカバーしているか？', choices:['約50カ国','約10カ国','約20カ国','約100カ国'], answer:0 },
+    { type:'mc', q:'「アメリカ10年国債利回り」が上昇すると、一般的に株式市場にどう影響するか？', choices:['株価の割引率上昇により株価下落圧力になりやすい','株価が上昇しやすい','為替に影響しない','金価格が上昇する'], answer:0 },
+    { type:'mc', q:'「ナスダック100」に含まれる企業の特徴は？', choices:['ナスダック市場に上場する金融業を除く時価総額上位100社','ダウ工業株30種の補完指数','S&P500の上位100社','米国の小型成長株100社'], answer:0 },
+    { type:'tf', q:'「売り板が厚い」状態では、株価が上昇しにくいとされる', answer:true },
+    { type:'mc', q:'「デリバティブ」とはどのような金融商品か？', choices:['株式・債券・通貨などの原資産から派生した金融商品（先物・オプション等）','政府が発行する安全な債券','中央銀行が管理する通貨','インデックスに連動する投資信託'], answer:0 },
+    { type:'mc', q:'「オプション取引」で「コール・オプション」の買い手の権利は？', choices:['あらかじめ決めた価格で原資産を買う権利','あらかじめ決めた価格で原資産を売る権利','いつでも相場に介入する権利','満期前に解約できる権利'], answer:0 },
+    { type:'tf', q:'「先物取引」は将来の一定日時に、あらかじめ決めた価格で売買する契約である', answer:true },
+    { type:'mc', q:'「ポートフォリオのベータ値」が1を超える場合、どんな特性があるか？', choices:['市場全体の動きより大きく価格が変動しやすい','市場とまったく連動しない','リスクが市場より低い','配当利回りが市場平均より高い'], answer:0 },
+    { type:'mc', q:'「ESG投資」のSは何を指すか？', choices:['Social（社会）','Sustainability（持続可能性）','Stock（株式）','Standard（標準）'], answer:0 },
+    { type:'tf', q:'「空売り残高」が多い銘柄では、株価上昇時に踏み上げ（ショートスクイーズ）が起きることがある', answer:true },
+    { type:'mc', q:'「パッシブ運用」とはどんな運用スタイルか？', choices:['市場平均（インデックス）への連動を目指す運用','市場平均を上回ることを目指すアクティブな運用','短期売買を繰り返す運用','配当のみを重視する運用'], answer:0 },
+    { type:'mc', q:'「アクティブ運用」の特徴として正しいのは？', choices:['ファンドマネージャーが銘柄選択し市場平均超過を目指す','インデックスに機械的に連動する','手数料が一般的に低い','銘柄の入れ替えが少ない'], answer:0 },
+    { type:'tf', q:'一般的にアクティブファンドはインデックスファンドより信託報酬（手数料）が高い', answer:true },
+  ],
+};
+
+// ============================================================
+// TICKER DATA
+// ============================================================
+const TICKER_DATA = [
+  { sym:'7203.T', name:'トヨタ', price:'3,250', chg:'+1.2%', up:true },
+  { sym:'6758.T', name:'ソニーG', price:'12,450', chg:'+0.8%', up:true },
+  { sym:'6861.T', name:'キーエンス', price:'65,800', chg:'-0.3%', up:false },
+  { sym:'9984.T', name:'ソフトバンクG', price:'9,120', chg:'+2.1%', up:true },
+  { sym:'AAPL', name:'Apple', price:'$182.5', chg:'+0.5%', up:true },
+  { sym:'NVDA', name:'NVIDIA', price:'$875.2', chg:'+3.2%', up:true },
+  { sym:'TSLA', name:'Tesla', price:'$245.8', chg:'-1.4%', up:false },
+  { sym:'MSFT', name:'Microsoft', price:'$415.3', chg:'+0.9%', up:true },
+  { sym:'AMZN', name:'Amazon', price:'$185.6', chg:'+1.1%', up:true },
+  { sym:'N225', name:'日経225', price:'38,250', chg:'+0.6%', up:true },
+  { sym:'SPX', name:'S&P500', price:'5,120', chg:'+0.4%', up:true },
+  { sym:'DXY', name:'ドル円', price:'¥149.8', chg:'-0.2%', up:false },
+];
+
+function buildTicker() {
+  const t = document.getElementById('ticker');
+  const html = [...TICKER_DATA, ...TICKER_DATA].map(d => `
+    <span class="ticker-item">
+      <span style="color:var(--text-dim)">${d.sym}</span>
+      <span>${d.name}</span>
+      <span>${d.price}</span>
+      <span class="${d.up ? 'up' : 'down'}">${d.chg}</span>
+    </span>
+  `).join('');
+  t.innerHTML = html;
+}
+
+// ============================================================
+// GENRE SELECTION
+// ============================================================
+let selectedGenre = null;
+
+function buildGenreGrid() {
+  const grid = document.getElementById('genre-grid');
+  grid.innerHTML = GENRES.map(g => `
+    <div class="genre-card" onclick="selectGenre('${g.id}')" id="genre-card-${g.id}">
+      <div class="genre-icon">${g.icon}</div>
+      <div class="genre-name">${g.name}</div>
+      <div class="genre-count">${QUESTIONS[g.id].length}問収録</div>
+    </div>
+  `).join('');
+}
+
+function selectGenre(id) {
+  selectedGenre = id;
+  document.querySelectorAll('.genre-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('genre-card-' + id).classList.add('selected');
+  document.getElementById('btn-start').disabled = false;
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let gameQuestions = [];
+let currentQ = 0;
+let score = 0;
+let timeLeft = 120;
+let timerInterval = null;
+let wrongItems = [];
+let answered = false;
+let playerName = '';
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  playerName = document.getElementById('player-name').value.trim() || 'プレーヤー';
+  const pool = QUESTIONS[selectedGenre];
+  gameQuestions = shuffle(pool).slice(0, 10);
+  currentQ = 0;
+  score = 0;
+  timeLeft = 120;
+  wrongItems = [];
+
+  showScreen('screen-game');
+  renderQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      clearInterval(timerInterval);
+      endGame();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const bar = document.getElementById('timer-bar');
+  const text = document.getElementById('timer-text');
+  const pct = Math.max(0, (timeLeft / 120) * 100);
+  bar.style.width = pct + '%';
+  text.textContent = timeLeft;
+  const danger = timeLeft <= 20;
+  bar.classList.toggle('danger', danger);
+  text.classList.toggle('danger', danger);
+}
+
+function renderQuestion() {
+  const q = gameQuestions[currentQ];
+  const genreInfo = GENRES.find(g => g.id === selectedGenre);
+
+  document.getElementById('q-counter').textContent = `問 ${currentQ + 1} / 10`;
+  document.getElementById('score-display').textContent = score + ' PT';
+  document.getElementById('q-genre-tag').textContent = genreInfo.icon + ' ' + genreInfo.name;
+
+  const badge = document.getElementById('question-type-badge');
+  badge.innerHTML = q.type === 'mc'
+    ? '<span class="question-type-badge badge-4choice">4択問題</span>'
+    : '<span class="question-type-badge badge-truefalse">○×問題</span>';
+
+  document.getElementById('question-text').textContent = q.q;
+
+  const grid = document.getElementById('choices-grid');
+  answered = false;
+  document.getElementById('feedback-bar').classList.remove('show', 'correct-fb', 'wrong-fb');
+
+  if (q.type === 'mc') {
+    const shuffledChoices = shuffle(q.choices.map((c, i) => ({ text: c, orig: i })));
+    grid.className = 'choices-grid';
+    grid.innerHTML = shuffledChoices.map((c, i) => `
+      <button class="choice-btn" onclick="answer(${c.orig === q.answer}, this, ${c.orig === q.answer ? 0 : c.orig})">
+        <span class="choice-label">${String.fromCharCode(65+i)}</span>${c.text}
+      </button>
+    `).join('');
+
+    // Store correct button index for highlight
+    grid.querySelectorAll('.choice-btn').forEach((btn, i) => {
+      btn.dataset.isCorrect = (shuffledChoices[i].orig === q.answer);
+    });
+  } else {
+    grid.className = 'choices-grid truefalse';
+    grid.innerHTML = `
+      <button class="choice-btn truefalse-btn" onclick="answer(${q.answer === true}, this)">⭕ 正しい</button>
+      <button class="choice-btn truefalse-btn" onclick="answer(${q.answer === false}, this)">❌ 違う</button>
+    `;
+  }
+}
+
+function answer(isCorrect, btn, choiceIdx) {
+  if (answered) return;
+  answered = true;
+
+  const q = gameQuestions[currentQ];
+  const grid = document.getElementById('choices-grid');
+  const fb = document.getElementById('feedback-bar');
+
+  // Disable all buttons
+  grid.querySelectorAll('.choice-btn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.isCorrect === 'true') b.classList.add('correct');
+  });
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    score += 10;
+    timeLeft = Math.min(timeLeft + 5, 999);
+    fb.textContent = '✅ 正解！ ＋10点 ＋5秒';
+    fb.className = 'feedback-bar show correct-fb';
+  } else {
+    btn.classList.add('wrong');
+    timeLeft = Math.max(0, timeLeft - 5);
+    const correctText = q.type === 'mc' ? q.choices[q.answer] : (q.answer ? '正しい' : '違う');
+    fb.textContent = `❌ 正解は「${correctText}」（−5秒）`;
+    fb.className = 'feedback-bar show wrong-fb';
+    wrongItems.push(q);
+  }
+
+  updateTimerUI();
+  document.getElementById('score-display').textContent = score + ' PT';
+
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < 10) {
+      renderQuestion();
+    } else {
+      clearInterval(timerInterval);
+      endGame();
+    }
+  }, 1800);
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+  const bonus = Math.max(0, timeLeft);
+  const total = score + bonus;
+  const correct = gameQuestions.filter((q, i) => !wrongItems.includes(q)).length;
+  // Actually recalculate
+  const correctCount = 10 - wrongItems.length;
+  const wrongCount = wrongItems.length;
+
+  // Rank
+  let rank, rankClass;
+  if (total >= 180) { rank = 'S'; rankClass = 'rank-S'; }
+  else if (total >= 130) { rank = 'A'; rankClass = 'rank-A'; }
+  else if (total >= 80) { rank = 'B'; rankClass = 'rank-B'; }
+  else { rank = 'C'; rankClass = 'rank-C'; }
+
+  document.getElementById('result-rank').textContent = rank;
+  document.getElementById('result-rank').className = 'result-rank ' + rankClass;
+  document.getElementById('result-player-name').textContent = playerName + ' さん';
+  document.getElementById('stat-correct').textContent = correctCount;
+  document.getElementById('stat-wrong').textContent = wrongCount;
+  document.getElementById('stat-bonus').textContent = '+' + bonus;
+  document.getElementById('total-score').textContent = total;
+  document.getElementById('score-breakdown').textContent = `正解×10点(${score}pt) ＋ 残り時間ボーナス(${bonus}pt)`;
+
+  // Wrong review
+  const wr = document.getElementById('wrong-review');
+  if (wrongItems.length > 0) {
+    const genreInfo = GENRES.find(g => g.id === selectedGenre);
+    wr.innerHTML = `<div class="wrong-review-title">❌ 間違えた問題の復習（${wrongItems.length}問）</div>` +
+      wrongItems.map((q, i) => {
+        const correctText = q.type === 'mc' ? q.choices[q.answer] : (q.answer ? '正しい（○）' : '違う（×）');
+        return `<div class="wrong-item">
+          <div class="wrong-item-genre">${genreInfo.icon} ${genreInfo.name} | ${q.type === 'mc' ? '4択' : '○×'}</div>
+          <div class="wrong-item-q">Q. ${q.q}</div>
+          <div class="wrong-item-a">✅ <span>正解：${correctText}</span></div>
+        </div>`;
+      }).join('');
+  } else {
+    wr.innerHTML = '<div style="text-align:center;color:var(--accent);font-weight:700;padding:16px">🎉 全問正解！素晴らしい！</div>';
+  }
+
+  showScreen('screen-result');
+}
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showTop() {
+  clearInterval(timerInterval);
+  selectedGenre = null;
+  document.querySelectorAll('.genre-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-start').disabled = true;
+  showScreen('screen-top');
+}
+
+// ============================================================
+// DECORATIVE CHART
+// ============================================================
+function buildChartDeco() {
+  const lines = ['▲ +1.2%  ▼ -0.4%  ▲ +2.1%', '9,850 / 9,920 / 9,800', 'VOL: 2.4M  AVG: 9,855', '━━━━━━━━━━━━━━━'];
+  document.getElementById('chart-deco').innerHTML = lines.join('<br>');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('btn-start').addEventListener('click', startGame);
+buildTicker();
+buildGenreGrid();
+buildChartDeco();
+</script>
+</body>
+</html>
